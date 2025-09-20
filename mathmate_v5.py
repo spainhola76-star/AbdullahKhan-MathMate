@@ -7,7 +7,6 @@ import os
 # =======================
 # OpenAI API Configuration
 # =======================
-# Use Streamlit secrets or environment variable
 openai.api_key = st.secrets.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
 if not openai.api_key:
     st.error("OpenAI API key not found! Please set it in Streamlit secrets or environment variable.")
@@ -77,8 +76,13 @@ word_problems = [
     {"question": "A rectangle is 8 cm long and 5 cm wide. What is its perimeter and its area?", "answer": "Perimeter: 26 cm, Area: 40 cm²"},
 ]
 
-# Select a random problem
-problem = random.choice(word_problems)
+# =======================
+# Select a problem (only once per round)
+# =======================
+if "current_problem" not in st.session_state:
+    st.session_state.current_problem = random.choice(word_problems)
+
+problem = st.session_state.current_problem
 st.subheader("Try this problem:")
 st.write(problem["question"])
 
@@ -88,7 +92,7 @@ st.write(problem["question"])
 user_answer = st.text_input("Your Answer:")
 
 if st.button("Check Answer ✅"):
-    # Normalize answers to strings to avoid type errors
+    # Normalize answers to strings
     user_answer_str = str(user_answer).strip()
     correct_answer_str = str(problem["answer"]).strip()
 
@@ -110,6 +114,13 @@ if st.button("Check Answer ✅"):
         "your_answer": user_answer,
         "correct_answer": problem["answer"]
     })
+
+# =======================
+# When the user clicks "Next Problem", we can refresh
+# =======================
+if st.button("Next Problem ➡️"):
+    st.session_state.current_problem = random.choice(word_problems)
+    st.experimental_rerun()  # Rerun app to show new problem
 
 # =======================
 # Memory / History
